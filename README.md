@@ -92,3 +92,53 @@ Meaning: Each order can contain multiple items.
 Relationship: One-to-Many (1:N)
 
 Meaning: A product can appear in multiple order lines.
+
+---
+
+## 📌 Entity Relationship Diagram (ERD)
+
+```mermaid
+erDiagram
+
+    Category {
+        int category_id PK
+        string category_name
+    }
+
+    Product {
+        int product_id PK
+        string name
+        string description
+        numeric price
+        int stock_quantity
+        int category_id FK
+    }
+
+    Customer {
+        int customer_id PK
+        string first_name
+        string last_name
+        string email
+        string password
+    }
+
+    Orders {
+        int order_id PK
+        date order_date
+        int customer_id FK
+        int total_amount
+    }
+
+    Order_Details {
+        int order_detail_id PK
+        int order_id FK
+        int product_id FK
+        int quantity
+        numeric unit_price
+    }
+
+    Category ||--o{ Product : contains
+    Customer ||--o{ Orders : places
+    Orders ||--o{ Order_Details : includes
+    Product ||--o{ Order_Details : listed_in
+```
