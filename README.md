@@ -126,6 +126,7 @@ erDiagram
         int order_id PK
         date order_date
         int customer_id FK
+        status 
         int total_amount
     }
 
@@ -183,25 +184,49 @@ HAVING SUM(o.total_amount) > 500;
 
 ```
 ### 4. Applying Denormalization on Customer and Order Entities
-We can apply denormalization to Customer and Order entities to speed up data retrieval and reduce queries:
 
-Storing data in prebuilt files (JSON or XML)
+Reduce the need for joins and speed up frequent queries related to customer orders, especially for reporting, notifications, or analytics.
 
-Combine all customer data and their orders into a single file per customer.
+a) Duplicate key customer info in Orders table
 
-Store the file on disk.
+What: Add frequently accessed customer fields (like email, phone_number) directly into the Orders table.
 
-When a customer logs in, fetch the file by ID → faster than querying multiple tables.
+Why: When sending notifications or generating reports, no need to join with Customers.
 
-Note: Must regenerate the file on any data update.
+Example:
+```sql
+Orders(
+    order_id,
+    customer_id,
+    customer_email,   -- denormalized
+    order_date,
+    status,
+    total_amount
+)
 
-Application-level caching (RAM or Disk, e.g., Redis / Memcached)
+```
+Trade-off: Updating customer info requires updating multiple rows in Orders.
 
-Load customer data and orders into memory or cache.
+b) Precomputed order summaries
 
-When a customer logs in, read directly from the cache → extremely fast.
+What: Store aggregated data in the Customers table, e.g., total_orders, last_order_date, total_spent.
 
-Note: Cache must be updated on any database changes to ensure data accuracy.
+Why: Quickly fetch statistics without joining or scanning Orders.
+
+Example:
+
+```sql
+Customers(
+    customer_id,
+    name,
+    email,
+    total_orders,      -- denormalized
+    total_spent,       -- denormalized
+    last_order_date    -- denormalized
+)
+```
+Trade-off: Must update these fields whenever a new order is placed.
+
 
 ---
 
