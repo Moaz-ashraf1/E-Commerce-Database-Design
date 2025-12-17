@@ -203,3 +203,69 @@ When a customer logs in, read directly from the cache → extremely fast.
 
 Note: Cache must be updated on any database changes to ensure data accuracy.
 
+---
+
+### 5-Trigger to Automatically Create Sale History on Order Insertion
+This trigger automatically generates a sale history record whenever a new order is inserted into the Orders table. It captures details such as the order date, customer, product, quantity, and total amount
+
+```SQL
+CREATE TABLE Sale_History (
+    sale_id INT IDENTITY(1,1) PRIMARY KEY,
+    order_id INT NOT NULL,
+    customer_id INT NOT NULL,
+    product_id INT NOT NULL,
+    quantity INT NOT NULL,
+    order_date DATETIME NOT NULL,
+    total_amount DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (order_id) REFERENCES Orders(order_id),
+    FOREIGN KEY (customer_id) REFERENCES Customer(customer_id),
+    FOREIGN KEY (product_id) REFERENCES Product(product_id)
+);
+
+
+
+CREATE TRIGGER CreateSaleHistory
+ON Order_Details
+AFTER INSERT
+AS
+BEGIN
+
+    INSERT INTO Sale_History (
+        order_id,
+        customer_id,
+        product_id,
+        quantity,
+        order_date,
+        total_amount
+    )
+    SELECT
+        i.order_id,
+        o.customer_id,
+        i.product_id,
+        i.quantity,
+        o.order_date,
+        i.quantity * i.unit_price AS total_amount
+    FROM inserted i
+    JOIN Orders o 
+        ON o.order_id = i.order_id;
+END;
+GO
+```
+
+#### Example Usage (for testing):
+
+```SQL
+INSERT INTO Orders (order_id, order_date, customer_id, total_amount)
+VALUES (1234, GETDATE(), 1, 0);
+
+
+INSERT INTO Order_Details (order_detail_id, order_id, product_id, quantity, unit_price)
+VALUES (1243, 1234, 11, 3, 40);
+
+SELECT * FROM Order_Details;
+SELECT * FROM Sale_History;
+```
+
+
+
+
