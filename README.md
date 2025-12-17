@@ -126,7 +126,7 @@ erDiagram
         int order_id PK
         date order_date
         int customer_id FK
-        status 
+        string status 
         int total_amount
     }
 
